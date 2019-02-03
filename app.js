@@ -11,6 +11,12 @@ let server = require("http").Server(app);
 
 let config = {};
 
+let heroes = ["ana" , "ashe", "bastion", "brigitte", "dva", "doomfist", "genji", "hanzo", "junkrat", "lucio", "mccree", "mei", "mercy", "moira", "orisa", "pharah", "reaper", "reinhardt", "roadhog", "soldier76", "sombra", "symmetra", "torbjorn", "tracer", "widowmaker", "winston", "wrecking_ball", "zarya", "zenyatta" ]
+
+let configs = {
+
+}
+
 class Dataset{
     constructor(BaronGOF, TheDebaser, time){
         this.BaronGOF = BaronGOF;
@@ -75,12 +81,13 @@ function saveDataset(dataset){
         }
         console.log("datasets read successfully");
 
+        console.log("datasets :" + data);
 
         let datasets = data;
 
         if (datasets !== false){
 
-            if (!datasets){
+            if (!datasets || datasets == ""){
                 datasets = [];
             }
             else datasets = JSON.parse(datasets);
@@ -97,15 +104,17 @@ function saveDataset(dataset){
                 console.log("datasets written successfully");
                 console.log("preparing config");
                 //if server then update
-                if (process.argv[3] == "server") {getDatasets();}
+                if (process.argv[3] == "server") {getAllDatasets();}
             });
-         }
+        }
      });  
 }
 
-// return config for chartJs
-function getDatasets(){
-    return fs.readFile('save.json', function (err, data) {
+
+//get the datasets and setUp configs
+function getAllDatasets(){
+
+    fs.readFile('save.json', function (err, data) {
         if (err) {
             console.log("error reading file");
             console.log(err);
@@ -115,56 +124,70 @@ function getDatasets(){
 
         let datasets = data;
 
-        let TheDebaserAccuracy = [];
-        let BaronGOFAccuracy = [];
-        let TheDebaserWinrate = [];
-        let BaronGOFWinrate = [];
-        let time = [];
-
         if (datasets !== false){
 
             if (datasets){
                 datasets = JSON.parse(datasets);
+                for (heroesIndex = 0; heroesIndex < heroes.length; heroesIndex++){
+                    getDatasets(heroes[heroesIndex], datasets)
+                }
+            }
+        }
+    });
+}
 
+// calculate configs for chart js based on the hero and the datasets
+function getDatasets(hero, datasets){
+
+    let TheDebaserAccuracy = [];
+    let BaronGOFAccuracy = [];
+    let TheDebaserWinrate = [];
+    let BaronGOFWinrate = [];
+    let time = [];
+
+                //for each datasets
                 for (let indexDatasets = 0; indexDatasets < datasets.length; indexDatasets ++){
 
-                    let BaronGOFGames = datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.games_played;
-                    let BaronGOFWins = 0
-                    if (datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.games_won){
-                        BaronGOFWins = datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.games_won;
-                    }
-                    let BaronGOFWinrateTemp = ( BaronGOFGames / BaronGOFWins );
+                    //if the hero has been played on both account
+                    if (datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive[hero] && datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive[hero] ){
+                        let BaronGOFGames = datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive[hero].general_stats.games_played;
+                        let BaronGOFWins = 0
+                        if (datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive[hero].general_stats.games_won){
+                            BaronGOFWins = datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive[hero].general_stats.games_won;
+                        }
+                        let BaronGOFWinrateTemp = Math.round( ((BaronGOFWins / BaronGOFGames ) * 100) * 10 ) / 10;
 
-                    let TheDebaserGames = datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.games_played;
-                    let TheDebaserWins = 0
-                    if (datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.games_won){
-                        TheDebaserWins = datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.games_won;
-                    }
-                    let TheDebaserWinrateTemp = ( TheDebaserGames / TheDebaserWins );
+                        let TheDebaserGames = datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive[hero].general_stats.games_played;
+                        let TheDebaserWins = 0
+                        if (datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive[hero].general_stats.games_won){
+                            TheDebaserWins = datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive[hero].general_stats.games_won;
+                        }
+                        let TheDebaserWinrateTemp = Math.round( ((TheDebaserWins / TheDebaserGames ) * 100) * 10 ) / 10;
 
-                    //if at least on change on the values
-                    if (indexDatasets > 0){
-                        if (datasets[indexDatasets - 1].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy != datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy
-                            || datasets[indexDatasets - 1].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy != datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy
-                        ){
-                            BaronGOFAccuracy.push(datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
-                              TheDebaserAccuracy.push(datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
-                            time.push(datasets[indexDatasets].time);
+                        //if at least on change on the values
+                        if (indexDatasets > 0){
+                            if (datasets[indexDatasets - 1].BaronGOF.eu.heroes.stats.competitive[hero].general_stats.weapon_accuracy != datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive[hero].general_stats.weapon_accuracy
+                                || datasets[indexDatasets - 1].TheDebaser.eu.heroes.stats.competitive[hero].general_stats.weapon_accuracy != datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive[hero].general_stats.weapon_accuracy
+                            ){
+                                BaronGOFAccuracy.push((datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive[hero].general_stats.weapon_accuracy * 100));
+                                TheDebaserAccuracy.push((datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive[hero].general_stats.weapon_accuracy * 100));
+                                time.push(datasets[indexDatasets].time);
 
+                                BaronGOFWinrate.push(BaronGOFWinrateTemp);
+                                TheDebaserWinrate.push(TheDebaserWinrateTemp);
+                            }
+                        }
+                        else{
+                            BaronGOFAccuracy.push((datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive[hero].general_stats.weapon_accuracy * 100));
+                            TheDebaserAccuracy.push((datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive[hero].general_stats.weapon_accuracy * 100));
+                            time.push(moment(datasets[indexDatasets].time).fromNow());
                             BaronGOFWinrate.push(BaronGOFWinrateTemp);
                             TheDebaserWinrate.push(TheDebaserWinrateTemp);
                         }
                     }
-                    else{
-                        BaronGOFAccuracy.push(datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
-                        TheDebaserAccuracy.push(datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
-                        time.push(moment(datasets[indexDatasets].time).fromNow());
-                        BaronGOFWinrate.push(BaronGOFWinrateTemp);
-                        TheDebaserWinrate.push(TheDebaserWinrateTemp);
-                    }
                 }
 
-                config = {
+                configs[hero] = {
                     type: 'line',
                     data: {
                         labels: time,
@@ -222,21 +245,25 @@ function getDatasets(){
                                 scaleLabel: {
                                     display: true,
                                     labelString: 'Accuracy'
+                                },
+                                ticks: {
+                                    beginAtZero: true,
+                                    steps: 5,
+                                    stepValue: 1,
+                                    max: 100
                                 }
                             }]
                         }
                     }
                 }
 
-                console.log("config prepared for display");
+                console.log("config for " + hero + " prepared for display");
             }
-        }
-    });  
-}
+
 
 //return data or false if error
 function getData(battletag){
-    let url = 'https://owapi.net/api/v3/u/' + battletag + '/blob';
+    let url = 'https://owapi.net/api/v3/u/' + battletag + '/heroes';
 
     console.log("fetching data for " + battletag);
 
@@ -250,6 +277,9 @@ function getData(battletag){
             return false;
         } else if (data.error == 500) {
             console.log("error 500 fetching " + battletag);
+            return false;
+        } else if (data.eu.heroes.stats.competitive){
+            console.log("error 500 no data fetching " + battletag);
             return false;
         }
         else{
@@ -277,6 +307,23 @@ if (process.argv[2] == "listen"){
     console.log("gathering data every hours, use no arguments to only gather once, starting in 10s");
     setTimeout(runEveryHours,10000);
 }
+else if (process.argv[2] == "server"){
+    console.log("serving current data");
+
+    console.log("preparing the server");
+
+    getAllDatasets();
+
+    app.get('/:hero', function (req, res) {
+        if (!req.params.hero) req.params.hero = "genji";
+        console.log("rendering datas")
+        res.render("index", { 'config': JSON.stringify(configs[req.params.hero]), 'hero' : req.params.hero  });
+    });
+      
+    server.listen(8080);
+
+    console.log("server ready");
+}
 else if (process.argv[2]){
     console.log("wrong argument, use 'listen' to gather data every hours or nothing to gather data only once");
 }
@@ -289,11 +336,12 @@ if (process.argv[3] == "server"){
 
     console.log("preparing the server");
 
-    getDatasets();
+    getAllDatasets();
 
-    app.get('/', function (req, res) {
+    app.get('/:hero', function (req, res) {
+        if (!req.params.hero) req.params.hero = "genji";
         console.log("rendering datas")
-        res.render("index", { 'config': JSON.stringify(config)  });
+        res.render("index", { 'config': JSON.stringify(configs[req.params.hero]), 'hero' : req.params.hero  });
     });
       
     server.listen(8080);
