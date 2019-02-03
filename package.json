@@ -1,0 +1,14 @@
+{
+  "name": "genjitracker",
+  "version": "1.0.0",
+  "description": "tracking my ow data",
+  "main": "app.js",
+  "scripts": {
+    "test": "start"
+  },
+  "author": "Geoffroy B",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^2.3.0"
+  }
+}
