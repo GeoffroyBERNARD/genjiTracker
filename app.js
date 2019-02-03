@@ -115,8 +115,10 @@ function getDatasets(){
 
         let datasets = data;
 
-        let TheDebaser = [];
-        let BaronGOF = [];
+        let TheDebaserAccuracy = [];
+        let BaronGOFAccuracy = [];
+        let TheDebaserWinrate = [];
+        let BaronGOFWinrate = [];
         let time = [];
 
         if (datasets !== false){
@@ -126,20 +128,39 @@ function getDatasets(){
 
                 for (let indexDatasets = 0; indexDatasets < datasets.length; indexDatasets ++){
 
+                    let BaronGOFGames = datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.games_played;
+                    let BaronGOFWins = 0
+                    if (datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.games_won){
+                        BaronGOFWins = datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.games_won;
+                    }
+                    let BaronGOFWinrateTemp = ( BaronGOFGames / BaronGOFWins );
+
+                    let TheDebaserGames = datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.games_played;
+                    let TheDebaserWins = 0
+                    if (datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.games_won){
+                        TheDebaserWins = datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.games_won;
+                    }
+                    let TheDebaserWinrateTemp = ( TheDebaserGames / TheDebaserWins );
+
                     //if at least on change on the values
                     if (indexDatasets > 0){
                         if (datasets[indexDatasets - 1].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy != datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy
                             || datasets[indexDatasets - 1].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy != datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy
                         ){
-                            BaronGOF.push(datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
-                            TheDebaser.push(datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
+                            BaronGOFAccuracy.push(datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
+                              TheDebaserAccuracy.push(datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
                             time.push(datasets[indexDatasets].time);
+
+                            BaronGOFWinrate.push(BaronGOFWinrateTemp);
+                            TheDebaserWinrate.push(TheDebaserWinrateTemp);
                         }
                     }
                     else{
-                        BaronGOF.push(datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
-                        TheDebaser.push(datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
+                        BaronGOFAccuracy.push(datasets[indexDatasets].BaronGOF.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
+                        TheDebaserAccuracy.push(datasets[indexDatasets].TheDebaser.eu.heroes.stats.competitive.genji.general_stats.weapon_accuracy);
                         time.push(moment(datasets[indexDatasets].time).fromNow());
+                        BaronGOFWinrate.push(BaronGOFWinrateTemp);
+                        TheDebaserWinrate.push(TheDebaserWinrateTemp);
                     }
                 }
 
@@ -148,17 +169,30 @@ function getDatasets(){
                     data: {
                         labels: time,
                         datasets: [{
-                            label: 'BaronGOF',
+                            label: 'Baron Accuracy',
                             backgroundColor: "red",
                             borderColor: "red",
-                            data: BaronGOF,
+                            data: BaronGOFAccuracy,
                             fill: false
                         }, {
-                            label: 'TheDebaser',
+                            label: 'Debaser Accuracy',
                             fill: false,
                             backgroundColor: "blue",
                             borderColor: "blue",
-                            data: TheDebaser
+                            data: TheDebaserAccuracy
+                        },
+                        {
+                            label: 'Baron Winrate',
+                            backgroundColor: "pink",
+                            borderColor: "pink",
+                            data: BaronGOFWinrate,
+                            fill: false
+                        }, {
+                            label: 'Debaser Winrate',
+                            fill: false,
+                            backgroundColor: "purple",
+                            borderColor: "purple",
+                            data: TheDebaserWinrate
                         }]
                     },
                     options: {
