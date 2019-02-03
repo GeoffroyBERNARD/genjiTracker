@@ -9,6 +9,10 @@
   "author": "Geoffroy B",
   "license": "ISC",
   "dependencies": {
+    "chart.js": "^2.7.3",
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "moment": "^2.24.0",
     "node-fetch": "^2.3.0"
   }
 }
